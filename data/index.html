@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>双舵机抓取器控制</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .status {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196F3;
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .release-btn {
+            background: #f44336;
+        }
+        .release-btn:hover {
+            background: #da190b;
+        }
+        .demo-btn {
+            background: #ff9800;
+        }
+        .demo-btn:hover {
+            background: #e68900;
+        }
+        .status-btn {
+            background: #2196F3;
+        }
+        .status-btn:hover {
+            background: #1976D2;
+        }        #statusInfo {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        .angle-settings {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #ffc107;
+        }
+        .angle-input {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            gap: 10px;
+        }
+        .angle-input label {
+            min-width: 80px;
+            font-weight: bold;
+        }
+        .angle-input input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 80px;
+            text-align: center;
+        }
+        .set-angles-btn {
+            background: #ffc107;
+            color: #000;
+        }
+        .set-angles-btn:hover {
+            background: #e0a800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 双舵机抓取器控制台</h1>
+          <div class="status">
+            <strong>设备状态:</strong> 在线 | <strong>IP:</strong> <span id="deviceIP">获取中...</span>
+        </div>
+        
+        <div class="angle-settings">
+            <h3>🔧 角度设置</h3>
+            <div class="angle-input">
+                <label>张开角度:</label>
+                <input type="number" id="openAngle" min="0" max="180" value="120">
+                <span>° (0-180)</span>
+            </div>
+            <div class="angle-input">
+                <label>抓取角度:</label>
+                <input type="number" id="closeAngle" min="0" max="180" value="0">
+                <span>° (0-180)</span>
+            </div>
+            <button class="set-angles-btn" onclick="setAngles()" title="应用新的角度设置">
+                ⚙️ 应用设置
+            </button>
+        </div>
+        
+        <div class="controls">
+            <button onclick="sendCommand('/grip')" title="执行抓取动作">
+                🤏 抓取
+            </button>
+            <button class="release-btn" onclick="sendCommand('/release')" title="松开抓取">
+                ✋ 松开
+            </button>
+            <button class="demo-btn" onclick="sendCommand('/demo')" title="演示完整抓取流程">
+                🎭 演示
+            </button>
+            <button class="status-btn" onclick="getStatus()" title="查看当前状态">
+                📊 状态
+            </button>
+        </div>
+        
+        <div id="statusInfo">点击"状态"按钮查看设备信息</div>
+    </div>
+
+    <script>
+        // 页面加载时获取IP地址
+        window.onload = function() {
+            getStatus();
+        };
+
+        async function sendCommand(endpoint) {
+            try {
+                const response = await fetch(endpoint, { method: 'POST' });
+                const data = await response.json();
+                document.getElementById('statusInfo').textContent = 
+                    `✅ ${data.message}\n时间: ${new Date().toLocaleTimeString()}`;
+            } catch (error) {
+                document.getElementById('statusInfo').textContent = 
+                    `❌ 错误: ${error.message}\n时间: ${new Date().toLocaleTimeString()}`;
+            }
+        }        async function getStatus() {
+            try {
+                const response = await fetch('/status');
+                const data = await response.json();
+                document.getElementById('deviceIP').textContent = data.ip;
+                
+                // 更新角度输入框的当前值
+                if (data.open_angle !== undefined) {
+                    document.getElementById('openAngle').value = data.open_angle;
+                }
+                if (data.close_angle !== undefined) {
+                    document.getElementById('closeAngle').value = data.close_angle;
+                }
+                
+                document.getElementById('statusInfo').textContent = 
+                    `📊 设备状态信息:\n` +
+                    `状态: ${data.status === 'gripping' ? '抓取中 🤏' : '松开状态 ✋'}\n` +
+                    `舵机1角度: ${data.servo1_angle}°\n` +
+                    `舵机2角度: ${data.servo2_angle}°\n` +
+                    `张开角度设置: ${data.open_angle}°\n` +
+                    `抓取角度设置: ${data.close_angle}°\n` +
+                    `IP地址: ${data.ip}\n` +
+                    `更新时间: ${new Date().toLocaleTimeString()}`;
+            } catch (error) {
+                document.getElementById('statusInfo').textContent = 
+                    `❌ 获取状态失败: ${error.message}\n时间: ${new Date().toLocaleTimeString()}`;
+            }
+        }
+
+        async function setAngles() {
+            const openAngle = document.getElementById('openAngle').value;
+            const closeAngle = document.getElementById('closeAngle').value;
+            
+            try {
+                const formData = new FormData();
+                formData.append('open_angle', openAngle);
+                formData.append('close_angle', closeAngle);
+                
+                const response = await fetch('/set_angles', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                document.getElementById('statusInfo').textContent = 
+                    `⚙️ ${data.message}\n时间: ${new Date().toLocaleTimeString()}`;
+                    
+                // 刷新状态显示
+                setTimeout(getStatus, 500);
+            } catch (error) {
+                document.getElementById('statusInfo').textContent = 
+                    `❌ 设置角度失败: ${error.message}\n时间: ${new Date().toLocaleTimeString()}`;
+            }
+        }
+
+        // 定期更新状态（每5秒）
+        setInterval(getStatus, 5000);
+    </script>
+</body>
+</html>
