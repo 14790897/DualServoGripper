@@ -108,9 +108,9 @@
 </head>
 <body>
     <div class="container">
-        <h1>🤖 双舵机抓取器控制台</h1>
-          <div class="status">
-            <strong>设备状态:</strong> 在线 | <strong>IP:</strong> <span id="deviceIP">获取中...</span>
+        <h1>🤖 双舵机抓取器控制台</h1>        <div class="status">
+            <strong>设备状态:</strong> 在线 | <strong>IP:</strong> <span id="deviceIP">获取中...</span><br>
+            <strong>域名:</strong> <span id="deviceHostname">获取中...</span>
         </div>
         
         <div class="angle-settings">
@@ -170,6 +170,13 @@
                 const data = await response.json();
                 document.getElementById('deviceIP').textContent = data.ip;
                 
+                // 更新域名显示
+                if (data.hostname) {
+                    document.getElementById('deviceHostname').textContent = data.hostname;
+                } else {
+                    document.getElementById('deviceHostname').textContent = '未设置';
+                }
+                
                 // 更新角度输入框的当前值
                 if (data.open_angle !== undefined) {
                     document.getElementById('openAngle').value = data.open_angle;
@@ -186,6 +193,7 @@
                     `张开角度设置: ${data.open_angle}°\n` +
                     `抓取角度设置: ${data.close_angle}°\n` +
                     `IP地址: ${data.ip}\n` +
+                    `域名: ${data.hostname || '未设置'}\n` +
                     `更新时间: ${new Date().toLocaleTimeString()}`;
             } catch (error) {
                 document.getElementById('statusInfo').textContent = 

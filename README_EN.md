@@ -22,6 +22,7 @@ Video content includes:
 - ⚙️ **Dynamic Angle Settings**: Real-time servo angle adjustment through web interface
 - 📊 **Status Monitoring**: Real-time servo angle and device status monitoring
 - 🌐 **Web Interface**: User-friendly control interface supporting mobile and desktop access
+- 🔗 **mDNS Support**: Domain name access, no need to remember IP addresses
 
 ## Hardware Connections
 
@@ -161,13 +162,20 @@ You can modify default values in code or adjust them real-time through the web i
 
 ## Web Control Interface
 
-After device startup, access the device IP address in your browser to see the control interface:
+After device startup, access the control interface through:
 
+### 🌐 Access Methods
+- **IP Address**: `http://192.168.1.xxx` (IP shown by device)
+- **Domain Name**: `http://dualservogripper.local` (Recommended)
+
+### 🎛️ Interface Features
 - 🔧 **Angle Settings**: Dynamically adjust open and close angles
 - 🤏 **Grip Button**: Execute grip action
 - ✋ **Release Button**: Release grip
 - 🎭 **Demo Button**: Demonstrate complete sequence
 - 📊 **Status Button**: View device status
+
+💡 **Tip**: Using domain name access is more convenient, no need to find IP address!
 
 ## Troubleshooting
 

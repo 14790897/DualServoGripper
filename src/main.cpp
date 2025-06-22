@@ -4,6 +4,7 @@
 #include <ArduinoJson.h>
 #include <ESP32Servo.h>
 #include <LittleFS.h>
+#include <ESPmDNS.h>
 #include "secrets.h"
 //io13似乎没有pwm? 不对,根据文档,应该有pwm,最多四路
 // 舵机配置
@@ -20,6 +21,9 @@ AsyncWebServer server(80);
 // 舵机位置定义
 int OPEN_ANGLE = 0;           // 张开角度 (可调节)
 int CLOSE_ANGLE = 100;           // 抓取角度 (可调节)
+
+// mDNS配置
+const char *MDNS_HOSTNAME = "dualservogripper"; // 设备域名
 
 // 计算舵机2的相反角度 (180度对称)
 int getOppositeAngle(int angle) {
@@ -155,7 +159,8 @@ void setupWebServer() {  // 根页面 - 控制界面
     doc["open_angle"] = OPEN_ANGLE;
     doc["close_angle"] = CLOSE_ANGLE;
     doc["ip"] = WiFi.localIP().toString();
-    
+    doc["hostname"] = String(MDNS_HOSTNAME) + ".local";
+
     String response;
     serializeJson(doc, response);
     request->send(200, "application/json", response);
@@ -251,12 +256,35 @@ void setup() {
   Serial.println("WiFi连接成功!");
   Serial.print("IP地址: http://");
   Serial.println(WiFi.localIP());
-  
+
+  // 初始化mDNS
+  if (!MDNS.begin(MDNS_HOSTNAME))
+  {
+    Serial.println("启动mDNS失败!");
+  }
+  else
+  {
+    Serial.print("mDNS已启动: http://");
+    Serial.print(MDNS_HOSTNAME);
+    Serial.println(".local");
+
+    // 添加HTTP服务声明
+    MDNS.addService("http", "tcp", 80);
+    MDNS.addServiceTxt("http", "tcp", "path", "/");
+    MDNS.addServiceTxt("http", "tcp", "description", "Dual Servo Gripper Web Interface");
+  }
+
   // 配置Web服务器路由
   setupWebServer();
-  
   // 启动服务器
-  server.begin();  Serial.println("Web服务器已启动");
+  server.begin();
+  Serial.println("Web服务器已启动");
+  Serial.println("访问方式:");
+  Serial.print("  IP地址:   http://");
+  Serial.println(WiFi.localIP());
+  Serial.print("  域名:     http://");
+  Serial.print(MDNS_HOSTNAME);
+  Serial.println(".local");
   Serial.println("可用指令:");
   Serial.println("  GET  /status - 查看当前状态");
   Serial.println("  POST /set_angles - 设置角度参数");
