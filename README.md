@@ -2,6 +2,10 @@
 
 基于ESP32C3的双舵机抓取器控制系统，支持WiFi远程控制。
 
+![Build Status](https://github.com/your-username/DualServoGripper/workflows/Build%20Firmware/badge.svg)
+
+> 📖 **English Documentation**: [README_EN.md](README_EN.md)
+
 ## 📹 演示视频
 
 🎬 **项目演示视频**: [B站观看 - ESP32双舵机抓取器实战演示](https://www.bilibili.com/video/BV1wfNXzHEoZ/)
@@ -73,6 +77,40 @@ pio run --target upload
 
 # 查看串口输出
 pio device monitor
+```
+
+## 🚀 自动构建
+
+本项目支持GitHub Actions自动构建固件：
+
+### 构建触发条件
+- 推送到 `main` 或 `master` 分支
+- 创建Pull Request
+- 发布Release版本
+
+### 构建产物
+每次构建会生成以下文件：
+- `firmware.bin` - 主程序固件
+- `firmware.elf` - 调试用ELF文件  
+- `littlefs.bin` - 文件系统镜像 (包含Web前端文件)
+- `build-info.txt` - 构建信息和版本详情
+
+💡 **前端文件说明**: `littlefs.bin` 包含了 `data/` 目录下的所有Web前端文件(HTML、CSS、JS)，会自动打包到文件系统镜像中。
+
+### 获取构建文件
+1. **开发版本**: 在GitHub Actions的Artifacts中下载
+2. **发布版本**: 在Releases页面下载预编译固件
+
+### 手动刷写固件
+
+📖 **详细刷写指南**: [FLASHING_GUIDE.md](FLASHING_GUIDE.md)
+
+```bash
+# 使用esptool刷写固件
+esptool.py --chip esp32c3 --port COM3 write_flash 0x0 firmware.bin
+
+# 刷写文件系统 (包含前端文件)
+esptool.py --chip esp32c3 --port COM3 write_flash 0x200000 littlefs.bin
 ```
 
 ## API接口
